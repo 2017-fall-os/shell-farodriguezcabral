@@ -13,26 +13,34 @@ int main(int arcg, char **argv, char** envp){
     write(1,"$",1);
     read(0,input,100); //read user input
     char **command  = mytoc(input,' '); //tokenize the command entered by the user using mytoc()
+   
     int child = saferFork(); //Create a child process
     free(input);
    
     if(child == 0) //If process is a child,try executing the command
       {
 	int retVal = 0; //get return from execve to check for errors
-	char **path; //store the PATH variable when found
-	int i = 0;
-	for(;envp[i] != 0; i++) //iterate through envp to look for PATH
-	  { 
-	    path = mytoc(envp[i], '='); //tokenize envp[i]
-	    if(!strcmp(path[0],"PATH")) //if PATH is found, execute the command
-	      break;
+	//	char **path; //store the PATH variable when found
+
+	int i;
+	for(i = 0;envp[i] != (char*)0; i++) //iterate through envp to look for PATH
+	  {
+	    // printf("envp[%d] = \"%s\"\n", i, envp[i]);
+	   char ** path = mytoc(envp[i], '='); //tokenize envp[i]
+	    printf("path[%d] = \"%s\"\n", i, path[i]);
 	    
+	    if(!strcmp(path[0],"PATH")) //if PATH is found, execute the command
+	      {
+		retVal = execve(path[1],command,envp);
+		fprintf(stderr, "%s: exect returned %d\n", command[0],retVal);
+		// break;
+	      }
 	    for(;*path != '\0';path++)//free path in order to allow a new vector to be stored in case PATH is not found
-	      free(*path);  
+	      free(*path);
+	    //free(path);
 	  }
 	
-	retVal = execve(path[1],command,envp);
-	fprintf(stderr, "%s: exect returned %d\n", command[0],retVal);
+
       }
   }
   return 0;
