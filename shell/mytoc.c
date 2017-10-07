@@ -47,7 +47,7 @@ char ** mytoc(char *str,char delim){
     i++;
     character = *(str+ i);
   }
-  tokenVec[currTokens] = 0;
+  tokenVec[currTokens] = '\0';
   
   return tokenVec;
 }
@@ -106,7 +106,7 @@ char *copyToken(char *destination, const char *source){
       *destination++ = *source++;
     }
   
-  *destination = 0;//store null character
+  *destination = '\0';//store null character
   return temp;
 }
 
