@@ -13,46 +13,47 @@ char *concat(char *str,char *cmd,int lenght, int cmdLenght);
 int main(int argc, char **argv, char** envp){
   
   while(1){
+    // char *argv[] = {"whoami",NULL};
+    //char *env[] = {"PATH=/usr/local/sbin/:/usr/local"};
+
     char *input = (char*)malloc(100);//store user input
     write(1,"$",1);
     read(0,input,100); //read user input
-    
-    int status;
-    // pid_t pid, wpid ; //Create a child process
-    int pid = fork();
-   
-    if(pid == 0) //If process is a child,try executing the command
-      {
-	int retVal = 0; //get return from execve to check for errors
-        
-	char **command  = mytoc(input,' '); //tokenize the command entered by the user using mytoc()
-	//write(1,envp[26],20);
-	char **path = mytoc(envp[26],'=');
-	char **path2 = mytoc(path[1],':');
-	int cmdLenght = tokenLen(command[0]);
-	for(int i = 0; path2[i] != '\0'; i++)
-	  {
-	    int lenght = tokenLen(path2[i]);
-	    //  write(1,path2[i],20);
-	    //write(1,":",1);
-	    char *totalPath = concat(path2[i],command[0],lenght,cmdLenght+1);
-	    write(1,totalPath,20);
-	    write(1,":",1);
-	    struct stat sb;
-	  
-	    if(stat(totalPath,&sb) == 0)
-	      {
-		retVal = execve(totalPath,command,envp);
-		fprintf(stderr, "%s: exect returned%d\n",command[0],retVal);
-	      }
-	    //free(totalPath);
-	  }
+    char **command = mytoc(input,' ');
+    char *pathenv;
+    for(int i = 0; envp[i] != '\0'; i++){ //look for PATH environment
+      char **environment = mytoc(envp[i],'=');
+      //  write(1,environment[0],5);
+      //write(1,"&&",2);
+
+      if(strcmp(environment[0],"PATH") == 0){//check if PATH has been found
+	pathenv = environment[1];
       }
-  
-    else
-      waitpid(pid,&status,0);
-	
+    }
+
+    char **listOfPaths = mytoc(pathenv,':');
+    
+    int found;
+    int cmdLength = tokenLen(command[0]);
+    // write(1,listOfPaths[4],400);
+    for(int i = 0; listOfPaths[i] != '\0'; i++){
+      int pathLength = tokenLen(listOfPaths[i]);
+      char *completePath = concat(listOfPaths[i],command[0],pathLength,cmdLength);
+      struct stat sb;
+      found = stat(completePath,&sb);//check if command exists on path
+      if(found == 0){//if command exists, try executing it.
+	int retval = execve(completePath,command,envp); 
+	fprintf(stderr, "%s: exect returned %d\n",command[0],retval);
+
+      }
+
+      // int retval = execve("/bin/whoami",argv,envp); 
+      //write(1,completePath,20);
+       
+    }
+   
   }
+   
   return 0;
 }
 
