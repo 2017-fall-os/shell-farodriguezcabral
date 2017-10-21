@@ -16,11 +16,14 @@ int main(int argc, char **argv, char** envp){
     // char *argv[] = {"whoami",NULL};
     //char *env[] = {"PATH=/usr/local/sbin/:/usr/local"};
 
-    char *input = (char*)malloc(100);//store user input
+    char *inp = (char*)malloc(100);//store user input
     write(1,"$",1);
-    read(0,input,100); //read user input
-    char **command = mytoc(input,' ');
+    read(0,inp,100); //read user input
+    
+    char **input = mytoc(inp,'\n') ;
+    char **command = mytoc(input[0],' ');
     char *pathenv;
+   
     for(int i = 0; envp[i] != '\0'; i++){ //look for PATH environment
       char **environment = mytoc(envp[i],'=');
       //  write(1,environment[0],5);
