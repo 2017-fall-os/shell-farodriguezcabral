@@ -16,21 +16,19 @@ int main(int argc, char **argv, char** envp){
   int exitshell = 1;
   
   while(exitshell){
-    // char *argv[] = {"whoami",NULL};
-    //char *env[] = {"PATH=/usr/local/sbin/:/usr/local"};
-    write(1,"$",1);
-   
+ 
+    write(1,"$",1);  
     char *inp = (char*)malloc(100);//store user input
-    //write(1,"$",1);
     int bytesread = read(0,inp,100); //read user input
-    if(bytesread == 0) exit(0);
-    exitshell = exitShell(inp);
-    char **input = mytoc(inp,'\n');
-    char **command;
+    if(bytesread == 0)
+      exit(0);
+    exitshell = exitShell(inp);//check whether the user typed in exit to exit the shell
+    char **input = mytoc(inp,'\n');//get rid of new line character at the end of inp buffer
+    char **command;//store command
 
-    int child = saferFork();
+    int child = saferFork();//create a child process using saferFork.c provided by Dr. Freudenthal
    
-    if(child == 0){
+    if(child == 0){//check if current process is a child, if it is start executing the command
       if(input[0][0] == '/'){ //check if a path has been given
       
 	int lastToken = numberOfTokens(input[0],'/');//get position of command on given path
@@ -45,10 +43,8 @@ int main(int argc, char **argv, char** envp){
 	  fprintf(stderr, "%s: exect returned %d\n",command[0],retval);
 	}
       }
-
-  
+      //If a path has not been provided, shell will look for it using the PATH environment
       command = mytoc(input[0],' ');
-    
       char *pathenv;
    
       for(int i = 0; envp[i] != '\0'; i++){ //look for PATH environment
@@ -61,30 +57,23 @@ int main(int argc, char **argv, char** envp){
       }
 
       char **listOfPaths = mytoc(pathenv,':');
-    
       int found;
       int cmdLength = tokenLen(command[0]);
    
       for(int i = 0; listOfPaths[i] != '\0'; i++){
 	int pathLength = tokenLen(listOfPaths[i]);
-	char *completePath = concat(listOfPaths[i],command[0],pathLength,cmdLength);
+	char *completePath = concat(listOfPaths[i],command[0],pathLength,cmdLength);//concatenate command to its corresponding path
 	struct stat sb;
 	found = stat(completePath,&sb);//check if command exists on path
       
 	if(found == 0){//if command exists, try executing it.
 	  int retval = execve(completePath,command,envp); 
 	  fprintf(stderr, "%s: exect returned %d\n",command[0],retval);
-	}
-
-	// int retval = execve("/bin/whoami",argv,envp); 
-	//write(1,completePath,20);
-       
+	}  
       }
-
     }
     int status;
-    waitpid(child,&status,0);
-  
+    waitpid(child,&status,0);// wait for child process to finish execution
   }//while loop
  
   return 0;
